@@ -5,11 +5,11 @@
  *
  * PHP service wrapper for Henry Turnstiles : https://www.henry.com.br/
  *
- * @author Rogério Albandes <rogerio.albandes@gmail.com>
+ * @author  Rogério Albandes <rogerio.albandes@gmail.com>
  * @version 0.1
  * @package henry
  * @example example.php
- * @link https://pushover.net/api
+ * @link    https://github.com/albandes/henry
  * @license GNU License
  *
  */
@@ -18,12 +18,11 @@
 class henry
 {
 
-
     /*
      *  Maximum message size
      */
     const MESSAGE_MAX_LEN = '2048';
-    
+
     /**
      * Turnstile ipv4 address
      *
@@ -82,163 +81,13 @@ class henry
         $this->_port = $port;
     }
 
-    /*
-     *
-     */
-    public function sendBiometricBase64($idBiometric,$numBiometric,$biometricBase64,$cleanBuffer=true)
-    {
-
-		if($cleanBuffer)
-		    $this->flushBuffer();
-
-        $commandFull = "01+ED+00+T]".$idBiometric."}S}B}".$numBiometric."}512{" . $biometricBase64;
-
-        $commandHexa = $this->generate($commandFull);
-        $commandHexa  = str_replace(" ","",$commandHexa);
-
-        $ret = $this->connect();
-
-        if($ret !== true)
-            return $ret;
-
-        $ret = $this->writeSocket($this->hex2str($commandHexa));
-
-        if (!$ret)
-            return $ret ;
-
-        $arrayRet = $this->listen();
-
-        if( $arrayRet['success'] === false ){
-            return $arrayRet['message'];
-        } else {
-            if ($arrayRet['err_or_version'] != '000') {
-                return "Error: {$arrayRet['err_or_version']}";
-            }
-
-        }
-
-        return true ;
-
-	}
-
-    public function deleteBiometric($idBiometric,$cleanBuffer=true)
-    {
-
-        if($cleanBuffer)
-            $this->flushBuffer();
-
-        $commandFull = "01+ED+00+E]".$idBiometric;
-
-        $commandHexa = $this->generate($commandFull);
-        $commandHexa  = str_replace(" ","",$commandHexa);
-
-        $ret = $this->connect();
-        if($ret !== true)
-            return $ret;
-
-        $ret = $this->writeSocket($this->hex2str($commandHexa));
-
-        if (!$ret)
-            return $ret ;
-
-        $arrayRet = $this->listen();
-
-        if( $arrayRet['success'] === false ){
-            return $arrayRet['message'];
-        } else {
-            if ($arrayRet['err_or_version'] != '000') {
-                return $arrayRet['err_or_version'];
-            }
-
-        }
-
-        return true ;
-
-    }
-
-    /**
-     *
-     * Method to get biometric data from turnstile
-     *
-     * @author Rogerio Albandes <rogerio.albandeshelpdezk.cc>
-     *
-     * @param string $idBiometric Biometric Id
-     * @param string $numBiometric Biometric number
-     * @param bool $cleanBuffer  Clear output buffer true|false
-     *
-     * @since March 25, 2020
-     *
-     * * @return array [
-     *                  'success'       => true|false,
-     *                  'message'       => Error or success message
-     *                  'data'          => Biometric data
-     *                 ]
-     */
-    public function getBiometricByIdBase64($idBiometric, $numBiometric, $cleanBuffer=true)
-    {
-
-        if($cleanBuffer) $this->flushBuffer();
-        $index = rand(0,9);
-
-        $ret = $this->connect();
-        if($ret !== true) {
-            $arrayReturn['success'] = false;
-            $arrayReturn['data']    = '';
-            $arrayReturn['message'] = $ret;
-            return $arrayReturn;
-        }
-
-        $commandFull = "01+RD+00+T]".$idBiometric."}S}B}".$numBiometric;
-
-        $commandHexa = $this->generate($commandFull);
-
-        $commandHexa  = str_replace(" ","",$commandHexa);
-
-        $ret = $this->writeSocket($this->hex2str($commandHexa));
-        if (!$ret) {
-            $arrayReturn['success'] = false;
-            $arrayReturn['data']    = '';
-            $arrayReturn['message'] = $ret;
-            return $arrayReturn;
-        }
-
-        $arrayRet = $this->listen();
-
-        if( $arrayRet['success'] === false ){
-            $arrayReturn['success'] = false;
-            $arrayReturn['data']    = '';
-            $arrayReturn['message'] = $arrayRet['message'];
-            return $arrayReturn;
-        } else {
-            if ($arrayRet['err_or_version'] != '000') {
-                $arrayReturn['success'] = false;
-                $arrayReturn['data']    = '';
-                $arrayReturn['message'] = $arrayRet['err_or_version'];
-                return $arrayReturn;
-            }
-
-        }
-
-        $data = explode(']', $arrayRet['data']);
-        array_shift($data);
-
-        $temp = explode('}',$data['0']);
-        $fingerPrintBase64 =  explode('{',$temp['4']);
-
-        $arrayReturn['success'] = true;
-        $arrayReturn['message'] = 'Return fingerprint OK !!!';
-        $arrayReturn['data']    = $fingerPrintBase64[1];
-        return $arrayReturn;
-
-    }
-
     /**
      * Connect to equipment
      * Creates the socket
      *
-     * @return string|true Error message or true if conect
+     * @return string|true Error message or true if connect
      *
-    */
+     */
     public function connect()
     {
         if( !empty($this->_socket) )
@@ -258,7 +107,7 @@ class henry
         return true;
     }
 
-    /*
+    /**
      *  Writes to socket from the given buffer
      *
      * @param string $command Command to be sent to turnstile
@@ -278,7 +127,7 @@ class henry
         return true;
     }
 
-    /*
+    /**
      *  Listen Turnstile
      *
      *  @author Júlio Filho
@@ -357,8 +206,6 @@ class henry
         return $arrayReturn;
 
     }
-
-
 
     function generate($sString) {
         if(!empty($sString)) {
@@ -458,8 +305,8 @@ class henry
     public function parseError($errorNumber)
     {
         $arrayError = array(
-                    0 => "Não há erro",
-                    1 => "Não há dados",
+                    0   => "Não há erro",
+                    1   => "Não há dados",
                     10	=> "Comando desconhecido",
                     11	=> "Tamanho do pacote é inválido",
                     12	=> "Parâmetros informados são inválidos",
